@@ -1,0 +1,65 @@
+
+int subarrayBitwiseORs(int* arr, int arrSize)
+{
+    int current[32];
+    int next[32];
+
+    int currentSize = 0;
+    int answer = 0;
+
+    /* Large hash table */
+    int size = 1 << 23;
+
+    int *hash = (int *)malloc(size * sizeof(int));
+
+    for (int i = 0; i < size; i++)
+        hash[i] = -1;
+
+    for (int i = 0; i < arrSize; i++)
+    {
+        int nextSize = 0;
+
+        /* Subarray containing only arr[i] */
+        next[nextSize++] = arr[i];
+
+        /* Extend previous subarrays */
+        for (int j = 0; j < currentSize; j++)
+        {
+            int value = current[j] | arr[i];
+
+            if (value != next[nextSize - 1])
+                next[nextSize++] = value;
+        }
+
+        /* Add values to global hash set */
+        for (int j = 0; j < nextSize; j++)
+        {
+            unsigned int value = (unsigned int)next[j];
+
+            unsigned int index =
+                (value * 2654435761u) & (size - 1);
+
+            while (hash[index] != -1 &&
+                   hash[index] != (int)value)
+            {
+                index = (index + 1) & (size - 1);
+            }
+
+            if (hash[index] == -1)
+            {
+                hash[index] = (int)value;
+                answer++;
+            }
+        }
+
+        /* next becomes current */
+        currentSize = nextSize;
+
+        for (int j = 0; j < currentSize; j++)
+            current[j] = next[j];
+    }
+
+    free(hash);
+
+    return answer;
+}
