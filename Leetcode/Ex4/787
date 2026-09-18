@@ -1,0 +1,43 @@
+int findCheapestPrice(int n, int** flights, int flightsSize,
+                      int* flightsColSize, int src, int dst, int k)
+{
+    int *dist = malloc(n * sizeof(int));
+    int *temp = malloc(n * sizeof(int));
+
+    for (int i = 0; i < n; i++)
+        dist[i] = INF;
+
+    dist[src] = 0;
+
+    for (int stops = 0; stops <= k; stops++)
+    {
+        for (int i = 0; i < n; i++)
+            temp[i] = dist[i];
+
+        for (int i = 0; i < flightsSize; i++)
+        {
+            int from = flights[i][0];
+            int to = flights[i][1];
+            int price = flights[i][2];
+
+            if (dist[from] != INF &&
+                dist[from] + price < temp[to])
+            {
+                temp[to] = dist[from] + price;
+            }
+        }
+
+        for (int i = 0; i < n; i++)
+            dist[i] = temp[i];
+    }
+
+    int answer = dist[dst];
+
+    free(dist);
+    free(temp);
+
+    if (answer == INF)
+        return -1;
+
+    return answer;
+}
