@@ -1,0 +1,80 @@
+int minimumEffortPath(int** heights, int heightsSize, int* heightsColSize)
+{
+    int rows = heightsSize;
+    int cols = heightsColSize[0];
+    int total = rows * cols;
+
+    int *dist = malloc(total * sizeof(int));
+    int *visited = calloc(total, sizeof(int));
+
+    for (int i = 0; i < total; i++)
+        dist[i] = INF;
+
+    dist[0] = 0;
+
+    int dr[] = {-1, 1, 0, 0};
+    int dc[] = {0, 0, -1, 1};
+
+    for (int count = 0; count < total; count++)
+    {
+        int current = -1;
+        int minEffort = INF;
+
+        for (int i = 0; i < total; i++)
+        {
+            if (!visited[i] && dist[i] < minEffort)
+            {
+                minEffort = dist[i];
+                current = i;
+            }
+        }
+
+        if (current == -1)
+            break;
+
+        if (current == total - 1)
+            break;
+
+        visited[current] = 1;
+
+        int r = current / cols;
+        int c = current % cols;
+
+        for (int d = 0; d < 4; d++)
+        {
+            int nr = r + dr[d];
+            int nc = c + dc[d];
+
+            if (nr < 0 || nr >= rows ||
+                nc < 0 || nc >= cols)
+            {
+                continue;
+            }
+
+            int next = nr * cols + nc;
+
+            if (visited[next])
+                continue;
+
+            int difference =
+                abs(heights[r][c] - heights[nr][nc]);
+
+            int newEffort =
+                dist[current] > difference
+                ? dist[current]
+                : difference;
+
+            if (newEffort < dist[next])
+            {
+                dist[next] = newEffort;
+            }
+        }
+    }
+
+    int answer = dist[total - 1];
+
+    free(dist);
+    free(visited);
+
+    return answer;
+}
