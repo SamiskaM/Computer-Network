@@ -1,0 +1,89 @@
+int networkDelayTime(int** times, int timesSize, int* timesColSize,
+                     int n, int k)
+{
+    int **graph = malloc((n + 1) * sizeof(int *));
+
+    for (int i = 0; i <= n; i++)
+    {
+        graph[i] = malloc((n + 1) * sizeof(int));
+
+        for (int j = 0; j <= n; j++)
+            graph[i][j] = INF;
+    }
+
+    for (int i = 0; i < timesSize; i++)
+    {
+        int u = times[i][0];
+        int v = times[i][1];
+        int w = times[i][2];
+
+        graph[u][v] = w;
+    }
+
+    int *dist = malloc((n + 1) * sizeof(int));
+    int *visited = calloc(n + 1, sizeof(int));
+
+    for (int i = 1; i <= n; i++)
+        dist[i] = INF;
+
+    dist[k] = 0;
+
+    for (int count = 1; count <= n; count++)
+    {
+        int u = -1;
+        int min = INF;
+
+        for (int i = 1; i <= n; i++)
+        {
+            if (!visited[i] && dist[i] < min)
+            {
+                min = dist[i];
+                u = i;
+            }
+        }
+
+        if (u == -1)
+            break;
+
+        visited[u] = 1;
+
+        for (int v = 1; v <= n; v++)
+        {
+            if (!visited[v] &&
+                graph[u][v] != INF &&
+                dist[u] + graph[u][v] < dist[v])
+            {
+                dist[v] = dist[u] + graph[u][v];
+            }
+        }
+    }
+
+    int answer = 0;
+
+    for (int i = 1; i <= n; i++)
+    {
+        if (dist[i] == INF)
+        {
+            for (int j = 0; j <= n; j++)
+                free(graph[j]);
+
+            free(graph);
+            free(dist);
+            free(visited);
+
+            return -1;
+        }
+
+        if (dist[i] > answer)
+            answer = dist[i];
+    }
+
+    for (int i = 0; i <= n; i++)
+        free(graph[i]);
+
+    free(graph);
+    free(dist);
+    free(visited);
+
+    return answer;
+}
