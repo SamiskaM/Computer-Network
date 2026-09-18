@@ -1,0 +1,70 @@
+typedef struct {
+    int to;
+    int direction;
+    int next;
+} Edge;
+
+int minReorder(int n, int** connections, int connectionsSize,
+               int* connectionsColSize)
+{
+    Edge *edges = malloc(2 * (n - 1) * sizeof(Edge));
+    int *head = malloc(n * sizeof(int));
+    int *visited = calloc(n, sizeof(int));
+    int *queue = malloc(n * sizeof(int));
+
+    int edgeCount = 0;
+    int i;
+
+    for (i = 0; i < n; i++)
+        head[i] = -1;
+
+    for (i = 0; i < connectionsSize; i++)
+    {
+        int a = connections[i][0];
+        int b = connections[i][1];
+
+        edges[edgeCount].to = b;
+        edges[edgeCount].direction = 1;
+        edges[edgeCount].next = head[a];
+        head[a] = edgeCount++;
+
+        edges[edgeCount].to = a;
+        edges[edgeCount].direction = 0;
+        edges[edgeCount].next = head[b];
+        head[b] = edgeCount++;
+    }
+
+    int front = 0;
+    int rear = 0;
+    int answer = 0;
+
+    queue[rear++] = 0;
+    visited[0] = 1;
+
+    while (front < rear)
+    {
+        int current = queue[front++];
+
+        for (int e = head[current]; e != -1; e = edges[e].next)
+        {
+            int nextCity = edges[e].to;
+
+            if (visited[nextCity])
+                continue;
+
+            visited[nextCity] = 1;
+
+            if (edges[e].direction == 1)
+                answer++;
+
+            queue[rear++] = nextCity;
+        }
+    }
+
+    free(edges);
+    free(head);
+    free(visited);
+    free(queue);
+
+    return answer;
+}
