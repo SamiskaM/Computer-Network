@@ -1,0 +1,92 @@
+int numBusesToDestination(int** routes, int routesSize,
+                          int* routesColSize,
+                          int source, int target)
+{
+    if (source == target)
+        return 0;
+
+    int maxStop = 1000000;
+
+    int **stopToBus = calloc(maxStop, sizeof(int *));
+    int *count = calloc(maxStop, sizeof(int));
+    int *capacity = calloc(maxStop, sizeof(int));
+
+    int i, j;
+
+    for (i = 0; i < routesSize; i++)
+    {
+        for (j = 0; j < routesColSize[i]; j++)
+        {
+            int stop = routes[i][j];
+
+            if (count[stop] == capacity[stop])
+            {
+                capacity[stop] =
+                    capacity[stop] == 0 ? 2 : capacity[stop] * 2;
+
+                stopToBus[stop] = realloc(
+                    stopToBus[stop],
+                    capacity[stop] * sizeof(int)
+                );
+            }
+
+            stopToBus[stop][count[stop]++] = i;
+        }
+    }
+
+    int *visitedBus = calloc(routesSize, sizeof(int));
+    int *visitedStop = calloc(maxStop, sizeof(int));
+
+    int *queue = malloc(routesSize * sizeof(int));
+
+    int front = 0;
+    int rear = 0;
+
+    for (i = 0; i < count[source]; i++)
+    {
+        int bus = stopToBus[source][i];
+
+        visitedBus[bus] = 1;
+        queue[rear++] = bus;
+    }
+
+    int buses = 1;
+
+    while (front < rear)
+    {
+        int levelEnd = rear;
+
+        while (front < levelEnd)
+        {
+            int bus = queue[front++];
+
+            for (j = 0; j < routesColSize[bus]; j++)
+            {
+                int stop = routes[bus][j];
+
+                if (stop == target)
+                    return buses;
+
+                if (visitedStop[stop])
+                    continue;
+
+                visitedStop[stop] = 1;
+
+                for (int k = 0; k < count[stop]; k++)
+                {
+                    int nextBus = stopToBus[stop][k];
+
+                    if (!visitedBus[nextBus])
+                    {
+                        visitedBus[nextBus] = 1;
+                        queue[rear++] = nextBus;
+                    }
+                }
+            }
+        }
+
+        buses++;
+    }
+
+    return -1;
+}
