@@ -1,0 +1,173 @@
+#include <stdlib.h>
+
+int cmp(const void *a, const void *b)
+{
+    int x = *(int *)a;
+    int y = *(int *)b;
+
+    if (x < y) return -1;
+    if (x > y) return 1;
+    return 0;
+}
+
+/* Binary search for value */
+int findRank(int *arr, int n, int value)
+{
+    int low = 0;
+    int high = n - 1;
+
+    while (low <= high)
+    {
+        int mid = low + (high - low) / 2;
+
+        if (arr[mid] == value)
+            return mid + 1;   // Fenwick tree uses 1-based index
+
+        if (arr[mid] < value)
+            low = mid + 1;
+        else
+            high = mid - 1;
+    }
+
+    return -1;
+}
+
+/* Add value to Fenwick Tree */
+void update(int *bit, int n, int index, int value)
+{
+    while (index <= n)
+    {
+        bit[index] += value;
+        index += index & -index;
+    }
+}
+
+/* Find the index of the k-th smallest element */
+int kth(int *bit, int n, int k)
+{
+    int index = 0;
+    int sum = 0;
+
+    int step = 1;
+
+    while (step < n)
+        step <<= 1;
+
+    for (int d = step; d != 0; d >>= 1)
+    {
+        int next = index + d;
+
+        if (next <= n && sum + bit[next] < k)
+        {
+            index = next;
+            sum += bit[next];
+        }
+    }
+
+    return index + 1;
+}
+
+double* medianSlidingWindow(int* nums, int numsSize, int k, int* returnSize)
+{
+    int resultCount = numsSize - k + 1;
+
+    double *result = malloc(resultCount * sizeof(double));
+
+    /*
+     * Coordinate compression
+     *
+     * sorted contains all values of nums.
+     */
+    int *sorted = malloc(numsSize * sizeof(int));
+
+    for (int i = 0; i < numsSize; i++)
+        sorted[i] = nums[i];
+
+    qsort(sorted, numsSize, sizeof(int), cmp);
+
+    /*
+     * Remove duplicates from sorted[]
+     */
+    int unique = 0;
+
+    for (int i = 0; i < numsSize; i++)
+    {
+        if (unique == 0 || sorted[i] != sorted[unique - 1])
+        {
+            sorted[unique++] = sorted[i];
+        }
+    }
+
+    /*
+     * Fenwick Tree
+     *
+     * bit[x] = number of elements currently present
+     * at compressed position x.
+     */
+    int *bit = calloc(unique + 1, sizeof(int));
+
+    /*
+     * Insert first window
+     */
+    for (int i = 0; i < k; i++)
+    {
+        int rank = findRank(sorted, unique, nums[i]);
+        update(bit, unique, rank, 1);
+    }
+
+    for (int i = 0; i < resultCount; i++)
+    {
+        /*
+         * Find median
+         */
+        if (k % 2 == 1)
+        {
+            int position = k / 2 + 1;
+
+            int rank = kth(bit, unique, position);
+
+            result[i] = sorted[rank - 1];
+        }
+        else
+        {
+            int position1 = k / 2;
+            int position2 = k / 2 + 1;
+
+            int rank1 = kth(bit, unique, position1);
+            int rank2 = kth(bit, unique, position2);
+
+            result[i] =
+                ((double)sorted[rank1 - 1] +
+                 (double)sorted[rank2 - 1]) / 2.0;
+        }
+
+        /*
+         * Remove outgoing element
+         */
+        int outgoingIndex = i;
+        int outgoingRank =
+            findRank(sorted, unique, nums[outgoingIndex]);
+
+        update(bit, unique, outgoingRank, -1);
+
+        /*
+         * Add next element
+         */
+        int incomingIndex = i + k;
+
+        if (incomingIndex < numsSize)
+        {
+            int incomingRank =
+                findRank(sorted, unique, nums[incomingIndex]);
+
+            update(bit, unique, incomingRank, 1);
+        }
+    }
+
+    free(sorted);
+    free(bit);
+
+    *returnSize = resultCount;
+
+    return result;
+}
